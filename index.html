@@ -2575,91 +2575,30 @@ html.is-mobile-landscape body {
   .detail-stamp { display: none; }
 }
 
-/* Phone landscape: detail windows fill the screen, no inner scrolling. */
+/* Phone landscape: scale the desktop detail layout as one piece.
+   Nothing is restyled or reflowed; only the whole window is scaled. */
 html.is-mobile-landscape .detail-layer {
   padding: 0;
+  overflow: hidden;
 }
 html.is-mobile-landscape .detail-dialog {
-  width: 100vw;
-  height: 100vh;
+  width: 900px;
+  max-width: none;
   max-height: none;
+  height: auto;
+  transform-origin: center center;
 }
 html.is-mobile-landscape .detail-paper {
-  width: 100%;
-  height: 100%;
+  width: 900px;
+  max-width: none;
   max-height: none;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-html.is-mobile-landscape .detail-paper::after { inset: 6px; }
-html.is-mobile-landscape .detail-tape { display: none; }
-html.is-mobile-landscape .detail-head {
-  gap: 9px;
-  padding: 12px 56px 8px 16px;
-}
-html.is-mobile-landscape .detail-index {
-  width: 27px;
-  height: 27px;
-  margin-top: 0;
-  font-size: 7px;
-}
-html.is-mobile-landscape .detail-kicker {
-  margin-bottom: 2px;
-  font-size: 6.5px;
-}
-html.is-mobile-landscape .detail-heading h2 {
-  font-size: 21px;
-  letter-spacing: -.4px;
-}
-html.is-mobile-landscape .detail-stamp { display: none; }
-html.is-mobile-landscape .detail-close {
-  top: 10px;
-  right: 10px;
-  height: 27px;
-  padding: 0 8px 0 7px;
-  font-size: 6.4px;
+  height: auto;
+  transform-origin: center center;
 }
 html.is-mobile-landscape .detail-body {
-  overflow: hidden;
-  padding: 8px 16px 7px;
+  flex: none;
+  overflow: visible;
 }
-html.is-mobile-landscape .detail-body__inner {
-  transform-origin: top center;
-  will-change: transform;
-}
-html.is-mobile-landscape .detail-foot {
-  padding: 4px 16px;
-  font-size: 5.8px;
-}
-html.is-mobile-landscape .detail-foot kbd { display: none; }
-html.is-mobile-landscape .projects-hint {
-  margin: 0 0 4px;
-  font-size: 8px;
-}
-html.is-mobile-landscape .works-lead { margin-bottom: 5px; }
-html.is-mobile-landscape .works-lead p { font-size: 8.5px; }
-html.is-mobile-landscape .works-lead span { font-size: 8.5px; }
-html.is-mobile-landscape .projects-grid { gap: 6px; }
-html.is-mobile-landscape .project {
-  grid-template-columns: 88px minmax(0, 1fr);
-  min-height: 92px;
-}
-html.is-mobile-landscape .project-info { padding: 6px 8px; }
-html.is-mobile-landscape .project-no { font-size: 5.4px; }
-html.is-mobile-landscape .project-info h3 {
-  margin: 2px 0;
-  font-size: 12px;
-}
-html.is-mobile-landscape .project-type { font-size: 5.8px; }
-html.is-mobile-landscape .project-info p {
-  margin: 3px 0 0;
-  font-size: 8px;
-  line-height: 1.35;
-}
-html.is-mobile-landscape .project-tags { display: none; }
-html.is-mobile-landscape .projects-hint i { display: none; }
-html.is-mobile-landscape .works-endnote { font-size: 6px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -4489,22 +4428,23 @@ html.is-mobile-landscape .works-endnote { font-size: 6px; }
 
   function fitOpenDetail() {
     if (detailLayer.hidden) return;
-    const inner = detailBody.querySelector(".detail-body__inner");
-    if (!inner) return;
-    inner.style.transform = "";
-    inner.style.width = "";
+    detailDialog.style.transform = "";
+    detailDialog.style.transformOrigin = "";
+    detailDialog.style.position = "";
+    detailDialog.style.left = "";
+    detailDialog.style.top = "";
     if (!document.documentElement.classList.contains("is-mobile-landscape")) return;
-    const bodyStyle = getComputedStyle(detailBody);
-    const available = detailBody.clientHeight
-      - (parseFloat(bodyStyle.paddingTop) || 0)
-      - (parseFloat(bodyStyle.paddingBottom) || 0)
-      - 2;
-    const natural = inner.scrollHeight;
-    if (!available || !natural || natural <= available) return;
-    const scale = Math.max(0.22, available / natural);
-    inner.style.width = `${(100 / scale).toFixed(2)}%`;
-    inner.style.transform = `scale(${scale.toFixed(4)})`;
-    inner.style.transformOrigin = "top left";
+    const naturalWidth = 900;
+    const naturalHeight = detailPaper.offsetHeight;
+    if (!naturalHeight) return;
+    const scale = Math.min(window.innerWidth / naturalWidth, window.innerHeight / naturalHeight, 1);
+    const visualWidth = naturalWidth * scale;
+    const visualHeight = naturalHeight * scale;
+    detailDialog.style.position = "absolute";
+    detailDialog.style.left = `${Math.round((window.innerWidth - visualWidth) / 2)}px`;
+    detailDialog.style.top = `${Math.round((window.innerHeight - visualHeight) / 2)}px`;
+    detailDialog.style.transformOrigin = "top left";
+    detailDialog.style.transform = `scale(${scale.toFixed(4)})`;
     detailBody.scrollTop = 0;
   }
 
