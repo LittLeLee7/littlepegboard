@@ -2549,6 +2549,26 @@ body.has-lightbox .studio-fab { opacity: 0; visibility: hidden; pointer-events: 
   .portrait-note { display: flex; }
 }
 
+/* Phone landscape: fill the width and let the board scroll vertically. */
+html.is-mobile-landscape,
+html.is-mobile-landscape body {
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+html.is-mobile-landscape body {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+html.is-mobile-landscape .viewport {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: var(--mobile-stage-h, 100vh);
+  overflow: hidden;
+}
+
 /* =========================================================
    RESPONSIVE + MOTION PREFERENCES
    ========================================================= */
@@ -3515,17 +3535,33 @@ body.has-lightbox .studio-fab { opacity: 0; visibility: hidden; pointer-events: 
     const vh = window.innerHeight;
     const marginX = 16;
     const marginY = 16;
+    const mobileLandscape = vw > vh && vw <= 1024 && vh <= 600;
+    const root = document.documentElement;
+    const wasMobileLandscape = root.classList.contains("is-mobile-landscape");
 
-    stageScale = Math.min(
-      (vw - marginX * 2) / DESIGN.w,
-      (vh - marginY * 2) / DESIGN.h
-    );
-    stageScale = Math.max(0.2, stageScale);
+    root.classList.toggle("is-mobile-landscape", mobileLandscape);
 
-    const x = (vw - DESIGN.w * stageScale) / 2;
-    const y = (vh - DESIGN.h * stageScale) / 2;
-    stage.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${stageScale})`;
+    if (mobileLandscape) {
+      // Fill the phone's width instead of shrinking the whole board into the
+      // short landscape height. The page then scrolls vertically to reveal the
+      // rest of the board, so nothing is cropped.
+      stageScale = vw / DESIGN.w;
+      root.style.setProperty("--mobile-stage-h", `${DESIGN.h * stageScale}px`);
+      stage.style.transform = `translate3d(0, 0, 0) scale(${stageScale})`;
+    } else {
+      stageScale = Math.min(
+        (vw - marginX * 2) / DESIGN.w,
+        (vh - marginY * 2) / DESIGN.h
+      );
+      stageScale = Math.max(0.2, stageScale);
+      root.style.removeProperty("--mobile-stage-h");
+      const x = (vw - DESIGN.w * stageScale) / 2;
+      const y = (vh - DESIGN.h * stageScale) / 2;
+      stage.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${stageScale})`;
+    }
+
     document.documentElement.style.setProperty("--scale", stageScale.toFixed(4));
+    if (mobileLandscape !== wasMobileLandscape) window.scrollTo(0, 0);
   }
 
   /* =========================================================
